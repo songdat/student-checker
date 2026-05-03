@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Checker FIXED</title>
+<title>Attendance FIX</title>
 
 <style>
 body{
@@ -13,15 +13,12 @@ body{
   color:white;
 }
 
-.container{
-  overflow-x:auto;
-}
+.container{ overflow-x:auto; }
 
-/* ===== TABLE ===== */
 table{
   border-collapse: collapse;
-  width: max-content;
-  min-width: 1200px;
+  width:max-content;
+  min-width:1200px;
   background:#1e293b;
 }
 
@@ -33,212 +30,133 @@ th, td{
   white-space:nowrap;
 }
 
-/* ===== STICKY COL 1 ===== */
-th:first-child,
-td:first-child{
-  position: sticky;
+/* sticky fix */
+th:first-child, td:first-child{
+  position:sticky;
   left:0;
-  width:60px;
-  min-width:60px;
   background:#020617;
   z-index:10;
+  width:60px;
 }
 
-/* ===== STICKY COL 2 ===== */
-th:nth-child(2),
-td:nth-child(2){
-  position: sticky;
+th:nth-child(2), td:nth-child(2){
+  position:sticky;
   left:60px;
-  width:180px;
-  min-width:180px;
   background:#1e293b;
   z-index:10;
-  box-shadow:2px 0 5px rgba(0,0,0,0.5);
+  width:180px;
 }
 
-/* ===== CLICK CELLS ===== */
-td.clickable{
+/* CLICK CELL */
+td.day{
   cursor:pointer;
+  user-select:none;
+  font-size:16px;
 }
 
-/* ===== CHECK STYLE ===== */
+/* CHECK STYLE */
 .checked{
   background:#22c55e;
   color:black;
   font-weight:bold;
-  font-size:14px;
 }
-
-/* ===== BUTTONS ===== */
-button{
-  margin:2px;
-  padding:4px 6px;
-  border:none;
-  border-radius:4px;
-  cursor:pointer;
-}
-
-.edit{ background:#3b82f6; color:white; }
-.move{ background:#f59e0b; }
-
-h2{
-  text-align:center;
-}
-
 </style>
 </head>
 
 <body>
 
-<h2>📋 Student Checker (FIXED ICON VERSION)</h2>
+<h3 style="text-align:center;">📋 Attendance FIX VERSION</h3>
 
 <div class="container">
 <table>
 <thead>
-<tr id="headerRow">
+<tr id="head">
   <th>No.</th>
   <th>Name</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="body"></tbody>
 </table>
 </div>
 
 <script>
 
 // ===== 20 STUDENTS =====
-let students = JSON.parse(localStorage.getItem("students20")) || [
-  {id:"s1", name:"Student 1"},
-  {id:"s2", name:"Student 2"},
-  {id:"s3", name:"Student 3"},
-  {id:"s4", name:"Student 4"},
-  {id:"s5", name:"Student 5"},
-  {id:"s6", name:"Student 6"},
-  {id:"s7", name:"Student 7"},
-  {id:"s8", name:"Student 8"},
-  {id:"s9", name:"Student 9"},
-  {id:"s10", name:"Student 10"},
-  {id:"s11", name:"Student 11"},
-  {id:"s12", name:"Student 12"},
-  {id:"s13", name:"Student 13"},
-  {id:"s14", name:"Student 14"},
-  {id:"s15", name:"Student 15"},
-  {id:"s16", name:"Student 16"},
-  {id:"s17", name:"Student 17"},
-  {id:"s18", name:"Student 18"},
-  {id:"s19", name:"Student 19"},
-  {id:"s20", name:"Student 20"}
+let students = [
+  "Student 1","Student 2","Student 3","Student 4","Student 5",
+  "Student 6","Student 7","Student 8","Student 9","Student 10",
+  "Student 11","Student 12","Student 13","Student 14","Student 15",
+  "Student 16","Student 17","Student 18","Student 19","Student 20"
 ];
 
-// ===== ATTENDANCE =====
-let data = JSON.parse(localStorage.getItem("attendance20")) || {};
+// ===== DATA =====
+let data = JSON.parse(localStorage.getItem("att")) || {};
 
 // ===== HEADER =====
-let headerRow = document.getElementById("headerRow");
+let head = document.getElementById("head");
 
 for(let d=1; d<=31; d++){
   let th = document.createElement("th");
   th.innerText = d;
-  headerRow.appendChild(th);
+  head.appendChild(th);
 }
 
-headerRow.innerHTML += "<th>Total</th><th>Control</th>";
+head.innerHTML += "<th>Total</th>";
 
-// ===== RENDER =====
-function render(){
+// ===== BUILD TABLE =====
+function build(){
 
-  let tbody = document.getElementById("tbody");
-  tbody.innerHTML = "";
+  let body = document.getElementById("body");
+  body.innerHTML = "";
 
-  students.forEach((s,i)=>{
+  students.forEach((name,i)=>{
 
-    let row = document.createElement("tr");
+    let tr = document.createElement("tr");
 
-    row.innerHTML += `<td>${i+1}</td>`;
-    row.innerHTML += `<td>${s.name}</td>`;
+    tr.innerHTML += `<td>${i+1}</td>`;
+    tr.innerHTML += `<td>${name}</td>`;
 
     let total = 0;
 
     for(let d=1; d<=31; d++){
 
-      let key = s.id + "_" + d;
+      let key = i+"_"+d;
 
       let td = document.createElement("td");
-      td.className = "clickable";
+      td.className = "day";
 
-      // ===== FIXED CHECK LOGIC =====
-      if(data[key] === true){
+      // SHOW STATE
+      if(data[key]){
         td.innerHTML = "✔";
         td.classList.add("checked");
         total++;
       }
 
-      td.onclick = () => {
+      // CLICK EVENT (IMPORTANT FIX)
+      td.onclick = function(){
 
-        // toggle true/false
-        if(data[key] === true){
+        if(data[key]){
           delete data[key];
+          td.innerHTML = "";
+          td.classList.remove("checked");
         } else {
           data[key] = true;
+          td.innerHTML = "✔";
+          td.classList.add("checked");
         }
 
-        localStorage.setItem("attendance20", JSON.stringify(data));
-        render();
+        localStorage.setItem("att", JSON.stringify(data));
       };
 
-      row.appendChild(td);
+      tr.appendChild(td);
     }
 
-    row.innerHTML += `<td>${total}</td>`;
-
-    // ===== CONTROL =====
-    let control = document.createElement("td");
-
-    control.innerHTML = `
-      <button class="edit" onclick="editName(${i})">Edit</button>
-      <button class="move" onclick="moveUp(${i})">↑</button>
-      <button class="move" onclick="moveDown(${i})">↓</button>
-    `;
-
-    row.appendChild(control);
-    tbody.appendChild(row);
+    tr.innerHTML += `<td>${total}</td>`;
+    body.appendChild(tr);
   });
 }
 
-// ===== EDIT =====
-function editName(i){
-  let name = prompt("Edit name:", students[i].name);
-  if(name){
-    students[i].name = name;
-    save();
-    render();
-  }
-}
-
-// ===== MOVE UP =====
-function moveUp(i){
-  if(i===0) return;
-  [students[i], students[i-1]] = [students[i-1], students[i]];
-  save();
-  render();
-}
-
-// ===== MOVE DOWN =====
-function moveDown(i){
-  if(i===students.length-1) return;
-  [students[i], students[i+1]] = [students[i+1], students[i]];
-  save();
-  render();
-}
-
-// ===== SAVE =====
-function save(){
-  localStorage.setItem("students20", JSON.stringify(students));
-  localStorage.setItem("attendance20", JSON.stringify(data));
-}
-
-// ===== INIT =====
-render();
+build();
 
 </script>
 
