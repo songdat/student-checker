@@ -33,7 +33,7 @@ th, td{
   white-space:nowrap;
 }
 
-/* ===== STICKY COLUMN 1 ===== */
+/* ===== STICKY COL 1 ===== */
 th:first-child,
 td:first-child{
   position: sticky;
@@ -41,10 +41,10 @@ td:first-child{
   width:60px;
   min-width:60px;
   background:#020617;
-  z-index:20;
+  z-index:10;
 }
 
-/* ===== STICKY COLUMN 2 ===== */
+/* ===== STICKY COL 2 ===== */
 th:nth-child(2),
 td:nth-child(2){
   position: sticky;
@@ -52,21 +52,21 @@ td:nth-child(2){
   width:180px;
   min-width:180px;
   background:#1e293b;
-  z-index:20;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+  z-index:10;
+  box-shadow:2px 0 5px rgba(0,0,0,0.5);
 }
 
-/* ===== CLICKABLE CELLS ===== */
+/* ===== CLICK CELLS ===== */
 td.clickable{
   cursor:pointer;
-  position: relative;
-  z-index:1;
 }
 
+/* ===== CHECK STYLE ===== */
 .checked{
   background:#22c55e;
   color:black;
   font-weight:bold;
+  font-size:14px;
 }
 
 /* ===== BUTTONS ===== */
@@ -84,12 +84,13 @@ button{
 h2{
   text-align:center;
 }
+
 </style>
 </head>
 
 <body>
 
-<h2>📋 Student Checker (FIXED VERSION)</h2>
+<h2>📋 Student Checker (FIXED ICON VERSION)</h2>
 
 <div class="container">
 <table>
@@ -153,8 +154,8 @@ function render(){
 
     let row = document.createElement("tr");
 
-    row.innerHTML += "<td>"+(i+1)+"</td>";
-    row.innerHTML += "<td>"+s.name+"</td>";
+    row.innerHTML += `<td>${i+1}</td>`;
+    row.innerHTML += `<td>${s.name}</td>`;
 
     let total = 0;
 
@@ -165,27 +166,30 @@ function render(){
       let td = document.createElement("td");
       td.className = "clickable";
 
-      if(data[key]){
-        td.innerHTML = "✓";
+      // ===== FIXED CHECK LOGIC =====
+      if(data[key] === true){
+        td.innerHTML = "✔";
         td.classList.add("checked");
         total++;
       }
 
-      td.onclick = ()=>{
-        if(data[key]){
+      td.onclick = () => {
+
+        // toggle true/false
+        if(data[key] === true){
           delete data[key];
-        }else{
+        } else {
           data[key] = true;
         }
 
-        save();
+        localStorage.setItem("attendance20", JSON.stringify(data));
         render();
       };
 
       row.appendChild(td);
     }
 
-    row.innerHTML += "<td>"+total+"</td>";
+    row.innerHTML += `<td>${total}</td>`;
 
     // ===== CONTROL =====
     let control = document.createElement("td");
