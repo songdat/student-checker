@@ -59,7 +59,7 @@ td.clickable { cursor:pointer; }
   color:black;
 }
 
-/* STICKY COLUMNS */
+/* ===== STICKY COLUMNS ===== */
 th:first-child,
 td:first-child {
   position: sticky;
@@ -75,9 +75,15 @@ td:nth-child(2) {
   left: 50px;
   background: #1e293b;
   z-index: 3;
+}
+
+/* shadow for better look */
+th:nth-child(2),
+td:nth-child(2) {
   box-shadow: 2px 0 5px rgba(0,0,0,0.5);
 }
 
+/* ===== BUTTONS ===== */
 button {
   margin:5px;
   padding:8px;
@@ -132,26 +138,22 @@ button {
 
 <script>
 
-// ===== 45 STUDENTS =====
+// ===== STUDENTS =====
 let students = [
-  "Student 1","Student 2","Student 3","Student 4","Student 5",
-  "Student 6","Student 7","Student 8","Student 9","Student 10",
-  "Student 11","Student 12","Student 13","Student 14","Student 15",
-  "Student 16","Student 17","Student 18","Student 19","Student 20",
-  "Student 21","Student 22","Student 23","Student 24","Student 25",
-  "Student 26","Student 27","Student 28","Student 29","Student 30",
-  "Student 31","Student 32","Student 33","Student 34","Student 35",
-  "Student 36","Student 37","Student 38","Student 39","Student 40",
-  "Student 41","Student 42","Student 43","Student 44","Student 45"
+  "สมชาย","อนันต์","นก","เมย์","บอย","เจน",
+  "พลอย","มาร์ค","มิ้น","ที","ไอซ์","แบงค์",
+  "ฟิล์ม","เกมส์","กัน","วิว","ฝน","บอส","อาร์ม","นัท"
 ];
 
 // ===== CURRENT MONTH =====
 let currentMonth = localStorage.getItem("selectedMonth") || (new Date().getMonth() + 1);
 currentMonth = parseInt(currentMonth);
 
+// ===== MONTH NAMES =====
 let monthNames = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.",
                   "ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 
+// ===== CREATE MONTH BUTTONS =====
 let monthDiv = document.getElementById("months");
 
 monthNames.forEach((m, index)=>{
@@ -171,7 +173,7 @@ monthNames.forEach((m, index)=>{
   monthDiv.appendChild(btn);
 });
 
-// ===== DATA =====
+// ===== LOAD DATA =====
 function loadData(){
   return JSON.parse(localStorage.getItem("attendance_"+currentMonth)) || {};
 }
@@ -187,7 +189,9 @@ for(let d=1; d<=31; d++){
   headerRow.appendChild(th);
 }
 
-headerRow.innerHTML += "<th>รวม</th>";
+let totalTh = document.createElement("th");
+totalTh.innerText = "รวม";
+headerRow.appendChild(totalTh);
 
 // ===== TABLE =====
 let tbody = document.getElementById("tbody");
