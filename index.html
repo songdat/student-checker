@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Table</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background:#0f172a;
+  color:white;
+}
+
+/* LANDSCAPE ONLY */
+#rotateWarning {
+  display: none;
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  color:white;
+  font-size:22px;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+@media screen and (orientation: portrait) {
+  #rotateWarning { display:flex; }
+  #mainContent { display:none; }
+}
+
+h2 { text-align:center; margin:10px; }
+
+.container { overflow-x:auto; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+  background: #1e293b;
+}
+
+th, td {
+  border: 1px solid #334155;
+  padding: 6px;
+  text-align: center;
+  font-size: 12px;
+}
+
+th { background:#020617; }
+
+td.name { text-align:left; }
+
+td.clickable { cursor:pointer; }
+
+.checked {
+  background:#22c55e;
+  color:black;
+  font-weight:bold;
+}
+
+button {
+  margin:10px;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+}
+
+.save { background:#3b82f6; color:white; }
+.export { background:#22c55e; color:black; }
+</style>
+</head>
+
+<body>
+
+<div id="rotateWarning">
+  กรุณาหมุนหน้าจอเป็นแนวนอน 📱➡️
+</div>
+
+<div id="mainContent">
+
+<h2>📋 ตารางเช็คชื่อ</h2>
+
+<div style="text-align:center;">
+  <button class="save" onclick="saveSupabase()">Save to Supabase</button>
+  <button class="export" onclick="exportExcel()">Export Excel</button>
+</div>
+
+<div class="container">
+<table>
+<thead>
+<tr id="headerRow">
+  <th>ลำดับที่</th>
+  <th>ชื่อ-สกุล</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+
+// ===== CONFIG (PUT YOUR KEY HERE) =====
+const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+const SUPABASE_API_KEY = "YOUR_ANON_KEY";
+
+// ===== STUDENTS =====
+let students = [
+  "สมชาย ใจดี","อนันต์ ดีมาก","นก สบาย",
+  "เมย์ สุขใจ","บอย แข็งแรง","เจน ฉลาด",
+  "พลอย สวย","มาร์ค เท่","มิ้น น่ารัก",
+  "ที ฉลาด","ไอซ์ เย็น","แบงค์ รวย",
+  "ฟิล์ม หล่อ","เกมส์ เก่ง","กัน นิสัยดี",
+  "วิว สูง","ฝน สดชื่น","บอส ผู้นำ",
+  "อาร์ม แข็งแรง","นัท เก่ง"
+];
+
+// ===== DATA =====
+let data = JSON.parse(localStorage.getItem("attendance")) || {};
+
+// ===== CREATE HEADER (NO document.write) =====
+let headerRow = document.getElementById("headerRow");
+
+for(let d=1; d<=30; d++){
+  let th = document.createElement("th");
+  th.innerText = d;
+  headerRow.appendChild(th);
+}
+
+let totalTh = document.createElement("th");
+totalTh.innerText = "รวม";
+headerRow.appendChild(totalTh);
+
+// ===== CREATE TABLE =====
+let tbody = document.getElementById("tbody");
+
+students.forEach((name, i)=>{
+
+  let row = document.createElement("tr");
+
+  row.innerHTML += "<td>"+(i+1)+"</td>";
+  row.innerHTML += "<td class='name'>"+name+"</td>";
+
+  let total = 0;
+
+  for(let d=1; d<=30; d++){
+
+    let key = i+"_"+d;
+    let td = document.createElement("td");
+    td.className = "clickable";
+
+    if(data[key]){
+      td.classList.add("checked");
+      td.innerHTML = "✓";
+      total++;
+    }
+
+    td.onclick = function(){
+
+      if(!data[key]){
+        data[key] = true;
+        td.classList.add("checked");
+        td.innerHTML = "✓";
+      } else {
+        delete data[key];
+        td.classList.remove("checked");
+        td.innerHTML = "";
+      }
+
+      localStorage.setItem("attendance", JSON.stringify(data));
+      updateTotals();
+    };
+
+    row.appendChild(td);
+  }
+
+  let totalCell = document.createElement("td");
+  totalCell.id = "total_"+i;
+  totalCell.innerText = total;
+
+  row.appendChild(totalCell);
+  tbody.appendChild(row);
+});
+
+// ===== UPDATE TOTAL =====
+function updateTotals(){
+  students.forEach((_, i)=>{
+    let count = 0;
+    for(let d=1; d<=30; d++){
+      if(data[i+"_"+d]) count++;
+    }
+    document.getElementById("total_"+i).innerText = count;
+  });
+}
+
+// ===== EXPORT =====
+function exportExcel(){
+
+  let csv = "ลำดับที่,ชื่อ-สกุล,";
+  for(let d=1; d<=30; d++) csv += "วันที่"+d+",";
+  csv += "รวม\n";
+
+  students.forEach((name,i)=>{
+    let row = (i+1)+","+name+",";
+    let total = 0;
+
+    for(let d=1; d<=30; d++){
+      if(data[i+"_"+d]){
+        row += "✓,";
+        total++;
+      } else {
+        row += ",";
+      }
+    }
+
+    row += total+"\n";
+    csv += row;
+  });
+
+  let blob = new Blob([csv], {type:"text/csv"});
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "attendance.csv";
+  a.click();
+}
+
+// ===== SAVE TO SUPABASE =====
+async function saveSupabase(){
+
+  let records = [];
+
+  for(let i=0; i<students.length; i++){
+    for(let d=1; d<=30; d++){
+      if(data[i+"_"+d]){
+        records.push({
+          student_index: i,
+          day: d,
+          status: true
+        });
+      }
+    }
+  }
+
+  if(records.length === 0){
+    alert("No data");
+    return;
+  }
+
+  try {
+    let res = await fetch(SUPABASE_URL + "/rest/v1/attendance", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_API_KEY,
+        "Authorization": "Bearer " + SUPABASE_API_KEY,
+        "Prefer": "resolution=merge-duplicates"
+      },
+      body: JSON.stringify(records)
+    });
+
+    if(res.ok){
+      alert("Saved successfully ✅");
+    } else {
+      let txt = await res.text();
+      console.log(txt);
+      alert("Error saving");
+    }
+
+  } catch(e){
+    console.error(e);
+    alert("Connection error");
+  }
+}
+
+</script>
+
+</body>
+</html>
