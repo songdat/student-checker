@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance Table</title>
+<title>Student Checker</title>
 
 <style>
 body {
@@ -41,7 +41,7 @@ h2 { text-align:center; margin:10px; }
 table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 900px;
+  min-width: 1000px;
   background: #1e293b;
 }
 
@@ -71,8 +71,9 @@ button {
   border-radius:8px;
 }
 
-.save { background:#3b82f6; color:white; }
 .export { background:#22c55e; color:black; }
+.reset { background:#ef4444; color:white; }
+
 </style>
 </head>
 
@@ -84,11 +85,11 @@ button {
 
 <div id="mainContent">
 
-<h2>📋 ตารางเช็คชื่อ</h2>
+<h2>📋 ตารางเช็คชื่อ (1–31 วัน)</h2>
 
 <div style="text-align:center;">
-  <button class="save" onclick="saveSupabase()">Save to Supabase</button>
   <button class="export" onclick="exportExcel()">Export Excel</button>
+  <button class="reset" onclick="resetData()">Reset</button>
 </div>
 
 <div class="container">
@@ -107,10 +108,6 @@ button {
 
 <script>
 
-// ===== CONFIG =====
-const SUPABASE_URL = "https://pjatqfixvxbxcbzmuabn.supabase.co";
-const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqYXRxZml4dnhieGNiem11YWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxODY3NjIsImV4cCI6MjA5Mjc2Mjc2Mn0.wHVKGktNuVQUsyr-ufbnO5f9U7pUA4nN0x8RttLse18";
-
 // ===== STUDENTS =====
 let students = [
   "สมชาย ใจดี","อนันต์ ดีมาก","นก สบาย",
@@ -122,12 +119,13 @@ let students = [
   "อาร์ม แข็งแรง","นัท เก่ง"
 ];
 
+// ===== LOAD DATA =====
 let data = JSON.parse(localStorage.getItem("attendance")) || {};
 
-// ===== HEADER =====
+// ===== CREATE HEADER =====
 let headerRow = document.getElementById("headerRow");
 
-for(let d=1; d<=30; d++){
+for(let d=1; d<=31; d++){
   let th = document.createElement("th");
   th.innerText = d;
   headerRow.appendChild(th);
@@ -137,10 +135,11 @@ let totalTh = document.createElement("th");
 totalTh.innerText = "รวม";
 headerRow.appendChild(totalTh);
 
-// ===== TABLE =====
+// ===== CREATE TABLE =====
 let tbody = document.getElementById("tbody");
 
 students.forEach((name, i)=>{
+
   let row = document.createElement("tr");
 
   row.innerHTML += "<td>"+(i+1)+"</td>";
@@ -148,7 +147,8 @@ students.forEach((name, i)=>{
 
   let total = 0;
 
-  for(let d=1; d<=30; d++){
+  for(let d=1; d<=31; d++){
+
     let key = i+"_"+d;
     let td = document.createElement("td");
     td.className = "clickable";
@@ -160,6 +160,7 @@ students.forEach((name, i)=>{
     }
 
     td.onclick = function(){
+
       if(!data[key]){
         data[key] = true;
         td.classList.add("checked");
@@ -185,28 +186,29 @@ students.forEach((name, i)=>{
   tbody.appendChild(row);
 });
 
-// ===== UPDATE =====
+// ===== UPDATE TOTAL =====
 function updateTotals(){
   students.forEach((_, i)=>{
     let count = 0;
-    for(let d=1; d<=30; d++){
+    for(let d=1; d<=31; d++){
       if(data[i+"_"+d]) count++;
     }
     document.getElementById("total_"+i).innerText = count;
   });
 }
 
-// ===== EXPORT =====
+// ===== EXPORT CSV =====
 function exportExcel(){
+
   let csv = "ลำดับที่,ชื่อ-สกุล,";
-  for(let d=1; d<=30; d++) csv += "วันที่"+d+",";
+  for(let d=1; d<=31; d++) csv += "วันที่"+d+",";
   csv += "รวม\n";
 
   students.forEach((name,i)=>{
     let row = (i+1)+","+name+",";
     let total = 0;
 
-    for(let d=1; d<=30; d++){
+    for(let d=1; d<=31; d++){
       if(data[i+"_"+d]){
         row += "✓,";
         total++;
@@ -226,52 +228,11 @@ function exportExcel(){
   a.click();
 }
 
-// ===== SAVE =====
-async function saveSupabase(){
-
-  let records = [];
-
-  for(let i=0; i<students.length; i++){
-    for(let d=1; d<=30; d++){
-      if(data[i+"_"+d]){
-        records.push({
-          student_index: i,
-          day: d,
-          status: true
-        });
-      }
-    }
-  }
-
-  if(records.length === 0){
-    alert("No data");
-    return;
-  }
-
-  try {
-    let res = await fetch(SUPABASE_URL + "/rest/v1/attendance", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_API_KEY,
-        "Authorization": "Bearer " + SUPABASE_API_KEY,
-        "Prefer": "resolution=merge-duplicates"
-      },
-      body: JSON.stringify(records)
-    });
-
-    let text = await res.text();
-    console.log(text);
-
-    if(res.ok){
-      alert("Saved successfully ✅");
-    } else {
-      alert("Error: check console (F12)");
-    }
-
-  } catch(e){
-    console.error(e);
-    alert("Connection error → use Live Server");
+// ===== RESET =====
+function resetData(){
+  if(confirm("ลบข้อมูลทั้งหมด?")){
+    localStorage.removeItem("attendance");
+    location.reload();
   }
 }
 
