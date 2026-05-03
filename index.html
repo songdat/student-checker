@@ -117,8 +117,11 @@ let students = [
   "ฟิล์ม","เกมส์","กัน","วิว","ฝน","บอส","อาร์ม","นัท"
 ];
 
-// ===== MONTH SETUP =====
-let currentMonth = new Date().getMonth() + 1;
+// ===== CURRENT MONTH (FIXED) =====
+let currentMonth = localStorage.getItem("selectedMonth") || (new Date().getMonth() + 1);
+currentMonth = parseInt(currentMonth);
+
+// ===== MONTH NAMES =====
 let monthNames = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.",
                   "ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 
@@ -135,8 +138,7 @@ monthNames.forEach((m, index)=>{
   }
 
   btn.onclick = ()=>{
-    currentMonth = index+1;
-    loadData();
+    localStorage.setItem("selectedMonth", index+1);
     location.reload();
   };
 
@@ -166,6 +168,7 @@ let tbody = document.getElementById("tbody");
 
 students.forEach((name,i)=>{
   let row = document.createElement("tr");
+
   row.innerHTML += "<td>"+(i+1)+"</td>";
   row.innerHTML += "<td class='name'>"+name+"</td>";
 
@@ -208,7 +211,7 @@ students.forEach((name,i)=>{
   tbody.appendChild(row);
 });
 
-// ===== UPDATE =====
+// ===== UPDATE TOTAL =====
 function updateTotals(){
   students.forEach((_,i)=>{
     let count=0;
