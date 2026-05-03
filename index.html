@@ -13,20 +13,16 @@ body {
   color:white;
 }
 
-/* LANDSCAPE ONLY */
 #rotateWarning {
   display: none;
   position: fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
+  top:0; left:0;
+  width:100%; height:100%;
   background:black;
   color:white;
   font-size:22px;
   justify-content:center;
   align-items:center;
-  z-index:9999;
 }
 
 @media screen and (orientation: portrait) {
@@ -34,7 +30,7 @@ body {
   #mainContent { display:none; }
 }
 
-h2 { text-align:center; margin:10px; }
+h2 { text-align:center; }
 
 .container { overflow-x:auto; }
 
@@ -47,31 +43,37 @@ table {
 
 th, td {
   border: 1px solid #334155;
-  padding: 6px;
+  padding: 5px;
   text-align: center;
   font-size: 12px;
 }
 
-th { background:#020617; }
-
 td.name { text-align:left; }
-
 td.clickable { cursor:pointer; }
 
 .checked {
   background:#22c55e;
   color:black;
-  font-weight:bold;
 }
 
 button {
-  margin:10px;
-  padding:10px;
+  margin:5px;
+  padding:8px;
   border:none;
-  border-radius:8px;
+  border-radius:6px;
 }
 
-.export { background:#22c55e; color:black; }
+.month-btn {
+  background:#334155;
+  color:white;
+}
+
+.active-month {
+  background:#22c55e;
+  color:black;
+}
+
+.export { background:#22c55e; }
 .reset { background:#ef4444; color:white; }
 
 </style>
@@ -79,17 +81,17 @@ button {
 
 <body>
 
-<div id="rotateWarning">
-  กรุณาหมุนหน้าจอเป็นแนวนอน 📱➡️
-</div>
+<div id="rotateWarning">หมุนหน้าจอเป็นแนวนอน</div>
 
 <div id="mainContent">
 
-<h2>📋 ตารางเช็คชื่อ (1–31 วัน)</h2>
+<h2 id="title">📋 ตารางเช็คชื่อ</h2>
+
+<div id="months" style="text-align:center;"></div>
 
 <div style="text-align:center;">
   <button class="export" onclick="exportExcel()">Export Excel</button>
-  <button class="reset" onclick="resetData()">Reset</button>
+  <button class="reset" onclick="resetData()">Reset เดือนนี้</button>
 </div>
 
 <div class="container">
@@ -110,19 +112,45 @@ button {
 
 // ===== STUDENTS =====
 let students = [
-  "สมชาย ใจดี","อนันต์ ดีมาก","นก สบาย",
-  "เมย์ สุขใจ","บอย แข็งแรง","เจน ฉลาด",
-  "พลอย สวย","มาร์ค เท่","มิ้น น่ารัก",
-  "ที ฉลาด","ไอซ์ เย็น","แบงค์ รวย",
-  "ฟิล์ม หล่อ","เกมส์ เก่ง","กัน นิสัยดี",
-  "วิว สูง","ฝน สดชื่น","บอส ผู้นำ",
-  "อาร์ม แข็งแรง","นัท เก่ง"
+  "สมชาย","อนันต์","นก","เมย์","บอย","เจน",
+  "พลอย","มาร์ค","มิ้น","ที","ไอซ์","แบงค์",
+  "ฟิล์ม","เกมส์","กัน","วิว","ฝน","บอส","อาร์ม","นัท"
 ];
 
-// ===== LOAD DATA =====
-let data = JSON.parse(localStorage.getItem("attendance")) || {};
+// ===== MONTH SETUP =====
+let currentMonth = new Date().getMonth() + 1;
+let monthNames = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.",
+                  "ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 
-// ===== CREATE HEADER =====
+// ===== CREATE MONTH BUTTONS =====
+let monthDiv = document.getElementById("months");
+
+monthNames.forEach((m, index)=>{
+  let btn = document.createElement("button");
+  btn.innerText = m;
+  btn.className = "month-btn";
+
+  if(index+1 === currentMonth){
+    btn.classList.add("active-month");
+  }
+
+  btn.onclick = ()=>{
+    currentMonth = index+1;
+    loadData();
+    location.reload();
+  };
+
+  monthDiv.appendChild(btn);
+});
+
+// ===== LOAD DATA =====
+function loadData(){
+  return JSON.parse(localStorage.getItem("attendance_"+currentMonth)) || {};
+}
+
+let data = loadData();
+
+// ===== HEADER =====
 let headerRow = document.getElementById("headerRow");
 
 for(let d=1; d<=31; d++){
@@ -131,47 +159,41 @@ for(let d=1; d<=31; d++){
   headerRow.appendChild(th);
 }
 
-let totalTh = document.createElement("th");
-totalTh.innerText = "รวม";
-headerRow.appendChild(totalTh);
+headerRow.innerHTML += "<th>รวม</th>";
 
-// ===== CREATE TABLE =====
+// ===== TABLE =====
 let tbody = document.getElementById("tbody");
 
-students.forEach((name, i)=>{
-
+students.forEach((name,i)=>{
   let row = document.createElement("tr");
-
   row.innerHTML += "<td>"+(i+1)+"</td>";
   row.innerHTML += "<td class='name'>"+name+"</td>";
 
   let total = 0;
 
   for(let d=1; d<=31; d++){
-
     let key = i+"_"+d;
     let td = document.createElement("td");
     td.className = "clickable";
 
     if(data[key]){
       td.classList.add("checked");
-      td.innerHTML = "✓";
+      td.innerHTML="✓";
       total++;
     }
 
-    td.onclick = function(){
-
+    td.onclick = ()=>{
       if(!data[key]){
-        data[key] = true;
+        data[key]=true;
         td.classList.add("checked");
-        td.innerHTML = "✓";
+        td.innerHTML="✓";
       } else {
         delete data[key];
         td.classList.remove("checked");
-        td.innerHTML = "";
+        td.innerHTML="";
       }
 
-      localStorage.setItem("attendance", JSON.stringify(data));
+      localStorage.setItem("attendance_"+currentMonth, JSON.stringify(data));
       updateTotals();
     };
 
@@ -186,10 +208,10 @@ students.forEach((name, i)=>{
   tbody.appendChild(row);
 });
 
-// ===== UPDATE TOTAL =====
+// ===== UPDATE =====
 function updateTotals(){
-  students.forEach((_, i)=>{
-    let count = 0;
+  students.forEach((_,i)=>{
+    let count=0;
     for(let d=1; d<=31; d++){
       if(data[i+"_"+d]) count++;
     }
@@ -197,41 +219,38 @@ function updateTotals(){
   });
 }
 
-// ===== EXPORT CSV =====
+// ===== EXPORT =====
 function exportExcel(){
-
-  let csv = "ลำดับที่,ชื่อ-สกุล,";
-  for(let d=1; d<=31; d++) csv += "วันที่"+d+",";
-  csv += "รวม\n";
+  let csv="ลำดับ,ชื่อ,";
+  for(let d=1; d<=31; d++) csv+="วัน"+d+",";
+  csv+="รวม\n";
 
   students.forEach((name,i)=>{
-    let row = (i+1)+","+name+",";
-    let total = 0;
+    let row=(i+1)+","+name+",";
+    let total=0;
 
     for(let d=1; d<=31; d++){
       if(data[i+"_"+d]){
-        row += "✓,";
+        row+="✓,";
         total++;
-      } else {
-        row += ",";
-      }
+      } else row+=",";
     }
 
-    row += total+"\n";
-    csv += row;
+    row+=total+"\n";
+    csv+=row;
   });
 
-  let blob = new Blob([csv], {type:"text/csv"});
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "attendance.csv";
+  let blob=new Blob([csv],{type:"text/csv"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="attendance_month_"+currentMonth+".csv";
   a.click();
 }
 
 // ===== RESET =====
 function resetData(){
-  if(confirm("ลบข้อมูลทั้งหมด?")){
-    localStorage.removeItem("attendance");
+  if(confirm("ลบข้อมูลเดือนนี้?")){
+    localStorage.removeItem("attendance_"+currentMonth);
     location.reload();
   }
 }
