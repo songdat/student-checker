@@ -107,7 +107,7 @@ button {
 
 <script>
 
-// ===== CONFIG (PUT YOUR KEY HERE) =====
+// ===== CONFIG =====
 const SUPABASE_URL = "https://pjatqfixvxbxcbzmuabn.supabase.co";
 const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqYXRxZml4dnhieGNiem11YWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxODY3NjIsImV4cCI6MjA5Mjc2Mjc2Mn0.wHVKGktNuVQUsyr-ufbnO5f9U7pUA4nN0x8RttLse18";
 
@@ -122,10 +122,9 @@ let students = [
   "อาร์ม แข็งแรง","นัท เก่ง"
 ];
 
-// ===== DATA =====
 let data = JSON.parse(localStorage.getItem("attendance")) || {};
 
-// ===== CREATE HEADER (NO document.write) =====
+// ===== HEADER =====
 let headerRow = document.getElementById("headerRow");
 
 for(let d=1; d<=30; d++){
@@ -138,11 +137,10 @@ let totalTh = document.createElement("th");
 totalTh.innerText = "รวม";
 headerRow.appendChild(totalTh);
 
-// ===== CREATE TABLE =====
+// ===== TABLE =====
 let tbody = document.getElementById("tbody");
 
 students.forEach((name, i)=>{
-
   let row = document.createElement("tr");
 
   row.innerHTML += "<td>"+(i+1)+"</td>";
@@ -151,7 +149,6 @@ students.forEach((name, i)=>{
   let total = 0;
 
   for(let d=1; d<=30; d++){
-
     let key = i+"_"+d;
     let td = document.createElement("td");
     td.className = "clickable";
@@ -163,7 +160,6 @@ students.forEach((name, i)=>{
     }
 
     td.onclick = function(){
-
       if(!data[key]){
         data[key] = true;
         td.classList.add("checked");
@@ -189,7 +185,7 @@ students.forEach((name, i)=>{
   tbody.appendChild(row);
 });
 
-// ===== UPDATE TOTAL =====
+// ===== UPDATE =====
 function updateTotals(){
   students.forEach((_, i)=>{
     let count = 0;
@@ -202,7 +198,6 @@ function updateTotals(){
 
 // ===== EXPORT =====
 function exportExcel(){
-
   let csv = "ลำดับที่,ชื่อ-สกุล,";
   for(let d=1; d<=30; d++) csv += "วันที่"+d+",";
   csv += "รวม\n";
@@ -231,7 +226,7 @@ function exportExcel(){
   a.click();
 }
 
-// ===== SAVE TO SUPABASE =====
+// ===== SAVE =====
 async function saveSupabase(){
 
   let records = [];
@@ -265,17 +260,18 @@ async function saveSupabase(){
       body: JSON.stringify(records)
     });
 
+    let text = await res.text();
+    console.log(text);
+
     if(res.ok){
       alert("Saved successfully ✅");
     } else {
-      let txt = await res.text();
-      console.log(txt);
-      alert("Error saving");
+      alert("Error: check console (F12)");
     }
 
   } catch(e){
     console.error(e);
-    alert("Connection error");
+    alert("Connection error → use Live Server");
   }
 }
 
