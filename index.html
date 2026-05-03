@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Checker</title>
+<title>Student Checker (20 Students)</title>
 
 <style>
 body {
@@ -12,26 +12,6 @@ body {
   background:#0f172a;
   color:white;
 }
-
-/* LANDSCAPE ONLY */
-#rotateWarning {
-  display: none;
-  position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:black;
-  color:white;
-  font-size:22px;
-  justify-content:center;
-  align-items:center;
-}
-
-@media screen and (orientation: portrait) {
-  #rotateWarning { display:flex; }
-  #mainContent { display:none; }
-}
-
-h2 { text-align:center; }
 
 .container { overflow-x:auto; }
 
@@ -49,136 +29,82 @@ th, td {
   font-size: 12px;
 }
 
-th { background:#020617; }
-
 td.name { text-align:left; }
-td.clickable { cursor:pointer; }
 
 .checked {
   background:#22c55e;
   color:black;
 }
 
-/* ===== STICKY COLUMNS ===== */
-th:first-child,
-td:first-child {
-  position: sticky;
-  left: 0;
-  width: 50px;
-  background: #020617;
-  z-index: 3;
-}
-
-th:nth-child(2),
-td:nth-child(2) {
-  position: sticky;
-  left: 50px;
-  background: #1e293b;
-  z-index: 3;
-}
-
-/* shadow for better look */
-th:nth-child(2),
-td:nth-child(2) {
-  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-}
-
-/* ===== BUTTONS ===== */
 button {
-  margin:5px;
-  padding:8px;
+  margin:2px;
+  padding:4px;
   border:none;
-  border-radius:6px;
+  border-radius:4px;
 }
 
-.month-btn {
-  background:#334155;
-  color:white;
+.edit { background:#3b82f6; color:white; }
+.move { background:#f59e0b; }
+
+/* sticky */
+th:first-child, td:first-child {
+  position: sticky;
+  left:0;
+  background:#020617;
 }
 
-.active-month {
-  background:#22c55e;
-  color:black;
+th:nth-child(2), td:nth-child(2){
+  position: sticky;
+  left:50px;
+  background:#1e293b;
 }
-
-.export { background:#22c55e; }
-.reset { background:#ef4444; color:white; }
-
 </style>
 </head>
 
 <body>
 
-<div id="rotateWarning">หมุนหน้าจอเป็นแนวนอน</div>
-
-<div id="mainContent">
-
-<h2>📋 ตารางเช็คชื่อ</h2>
-
-<div id="months" style="text-align:center;"></div>
-
-<div style="text-align:center;">
-  <button class="export" onclick="exportExcel()">Export Excel</button>
-  <button class="reset" onclick="resetData()">Reset เดือนนี้</button>
-</div>
+<h2 style="text-align:center;">📋 Student Checker (20 Students)</h2>
 
 <div class="container">
 <table>
 <thead>
 <tr id="headerRow">
-  <th>ลำดับที่</th>
-  <th>ชื่อ-สกุล</th>
+  <th>No.</th>
+  <th>Name</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
 
-</div>
-
 <script>
 
-// ===== STUDENTS =====
-let students = [
-  "สมชาย","อนันต์","นก","เมย์","บอย","เจน",
-  "พลอย","มาร์ค","มิ้น","ที","ไอซ์","แบงค์",
-  "ฟิล์ม","เกมส์","กัน","วิว","ฝน","บอส","อาร์ม","นัท"
+// ===== INITIAL STUDENTS (20 FIXED) =====
+let students = JSON.parse(localStorage.getItem("students20")) || [
+  {id:"s1", name:"Student 1"},
+  {id:"s2", name:"Student 2"},
+  {id:"s3", name:"Student 3"},
+  {id:"s4", name:"Student 4"},
+  {id:"s5", name:"Student 5"},
+  {id:"s6", name:"Student 6"},
+  {id:"s7", name:"Student 7"},
+  {id:"s8", name:"Student 8"},
+  {id:"s9", name:"Student 9"},
+  {id:"s10", name:"Student 10"},
+  {id:"s11", name:"Student 11"},
+  {id:"s12", name:"Student 12"},
+  {id:"s13", name:"Student 13"},
+  {id:"s14", name:"Student 14"},
+  {id:"s15", name:"Student 15"},
+  {id:"s16", name:"Student 16"},
+  {id:"s17", name:"Student 17"},
+  {id:"s18", name:"Student 18"},
+  {id:"s19", name:"Student 19"},
+  {id:"s20", name:"Student 20"}
 ];
 
-// ===== CURRENT MONTH =====
-let currentMonth = localStorage.getItem("selectedMonth") || (new Date().getMonth() + 1);
-currentMonth = parseInt(currentMonth);
-
-// ===== MONTH NAMES =====
-let monthNames = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.",
-                  "ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-
-// ===== CREATE MONTH BUTTONS =====
-let monthDiv = document.getElementById("months");
-
-monthNames.forEach((m, index)=>{
-  let btn = document.createElement("button");
-  btn.innerText = m;
-  btn.className = "month-btn";
-
-  if(index+1 === currentMonth){
-    btn.classList.add("active-month");
-  }
-
-  btn.onclick = ()=>{
-    localStorage.setItem("selectedMonth", index+1);
-    location.reload();
-  };
-
-  monthDiv.appendChild(btn);
-});
-
 // ===== LOAD DATA =====
-function loadData(){
-  return JSON.parse(localStorage.getItem("attendance_"+currentMonth)) || {};
-}
-
-let data = loadData();
+let data = JSON.parse(localStorage.getItem("attendance20")) || {};
 
 // ===== HEADER =====
 let headerRow = document.getElementById("headerRow");
@@ -189,104 +115,95 @@ for(let d=1; d<=31; d++){
   headerRow.appendChild(th);
 }
 
-let totalTh = document.createElement("th");
-totalTh.innerText = "รวม";
-headerRow.appendChild(totalTh);
+headerRow.innerHTML += "<th>Total</th><th>Control</th>";
 
-// ===== TABLE =====
-let tbody = document.getElementById("tbody");
+// ===== RENDER =====
+function render(){
 
-students.forEach((name,i)=>{
-  let row = document.createElement("tr");
+  let tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
 
-  row.innerHTML += "<td>"+(i+1)+"</td>";
-  row.innerHTML += "<td class='name'>"+name+"</td>";
+  students.forEach((s,i)=>{
 
-  let total = 0;
+    let row = document.createElement("tr");
 
-  for(let d=1; d<=31; d++){
-    let key = i+"_"+d;
-    let td = document.createElement("td");
-    td.className = "clickable";
+    row.innerHTML += "<td>"+(i+1)+"</td>";
+    row.innerHTML += "<td class='name'>"+s.name+"</td>";
 
-    if(data[key]){
-      td.classList.add("checked");
-      td.innerHTML="✓";
-      total++;
-    }
+    let total = 0;
 
-    td.onclick = ()=>{
-      if(!data[key]){
-        data[key]=true;
+    for(let d=1; d<=31; d++){
+      let key = s.id + "_" + d;
+      let td = document.createElement("td");
+
+      if(data[key]){
         td.classList.add("checked");
         td.innerHTML="✓";
-      } else {
-        delete data[key];
-        td.classList.remove("checked");
-        td.innerHTML="";
+        total++;
       }
 
-      localStorage.setItem("attendance_"+currentMonth, JSON.stringify(data));
-      updateTotals();
-    };
+      td.onclick = ()=>{
+        if(!data[key]){
+          data[key]=true;
+        } else {
+          delete data[key];
+        }
+        saveAll();
+        render();
+      };
 
-    row.appendChild(td);
-  }
-
-  let totalCell = document.createElement("td");
-  totalCell.id = "total_"+i;
-  totalCell.innerText = total;
-
-  row.appendChild(totalCell);
-  tbody.appendChild(row);
-});
-
-// ===== UPDATE =====
-function updateTotals(){
-  students.forEach((_,i)=>{
-    let count=0;
-    for(let d=1; d<=31; d++){
-      if(data[i+"_"+d]) count++;
+      row.appendChild(td);
     }
-    document.getElementById("total_"+i).innerText = count;
+
+    row.innerHTML += "<td>"+total+"</td>";
+
+    // ===== CONTROL =====
+    let control = document.createElement("td");
+
+    control.innerHTML = `
+      <button class="edit" onclick="editName(${i})">Edit</button>
+      <button class="move" onclick="moveUp(${i})">↑</button>
+      <button class="move" onclick="moveDown(${i})">↓</button>
+    `;
+
+    row.appendChild(control);
+    tbody.appendChild(row);
   });
 }
 
-// ===== EXPORT =====
-function exportExcel(){
-  let csv="ลำดับ,ชื่อ,";
-  for(let d=1; d<=31; d++) csv+="วัน"+d+",";
-  csv+="รวม\n";
+// ===== EDIT NAME =====
+function editName(i){
+  let newName = prompt("Enter new name:", students[i].name);
+  if(!newName) return;
 
-  students.forEach((name,i)=>{
-    let row=(i+1)+","+name+",";
-    let total=0;
-
-    for(let d=1; d<=31; d++){
-      if(data[i+"_"+d]){
-        row+="✓,";
-        total++;
-      } else row+=",";
-    }
-
-    row+=total+"\n";
-    csv+=row;
-  });
-
-  let blob=new Blob([csv],{type:"text/csv"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="attendance_month_"+currentMonth+".csv";
-  a.click();
+  students[i].name = newName;
+  saveAll();
+  render();
 }
 
-// ===== RESET =====
-function resetData(){
-  if(confirm("ลบข้อมูลเดือนนี้?")){
-    localStorage.removeItem("attendance_"+currentMonth);
-    location.reload();
-  }
+// ===== MOVE =====
+function moveUp(i){
+  if(i===0) return;
+  [students[i], students[i-1]] = [students[i-1], students[i]];
+  saveAll();
+  render();
 }
+
+function moveDown(i){
+  if(i===students.length-1) return;
+  [students[i], students[i+1]] = [students[i+1], students[i]];
+  saveAll();
+  render();
+}
+
+// ===== SAVE =====
+function saveAll(){
+  localStorage.setItem("students20", JSON.stringify(students));
+  localStorage.setItem("attendance20", JSON.stringify(data));
+}
+
+// ===== INIT =====
+render();
 
 </script>
 
